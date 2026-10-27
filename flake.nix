@@ -24,6 +24,7 @@
               pkg-config
               syft
               grype
+              clippy
             ];
           };
         };
