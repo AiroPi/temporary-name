@@ -20,17 +20,14 @@ async fn check_version(docker: &Docker) {
     fs::create_dir_all("sboms").await.unwrap();
     for container in containers.iter() {
         println!("{:#?}", container.image_id);
-        match container.image_id {
-            Some(ref v) => {
-                if let Some(hash) = v.strip_prefix("sha256:") {
-                    match fs::try_exists(format!("sboms/{}.json", hash)).await {
-                        Ok(false) => run_syft(hash).await.expect("Error"),
-                        Ok(true) => (),
-                        Err(e) => eprintln!("Failed to check if file exists : {}", e),
-                    }
+        if let Some(ref v) = container.image_id {
+            if let Some(hash) = v.strip_prefix("sha256:") {
+                match fs::try_exists(format!("sboms/{}.json", hash)).await {
+                    Ok(false) => run_syft(hash).await.expect("Error"),
+                    Ok(true) => (),
+                    Err(e) => eprintln!("Failed to check if file exists : {}", e),
                 }
             }
-            None => (),
         }
     }
     println!("{:#?}", containers);
