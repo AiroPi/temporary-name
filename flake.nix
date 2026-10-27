@@ -23,7 +23,7 @@
               clippy
               pkg-config
               syft
-
+              grype
             ];
           };
         };

@@ -59,9 +59,35 @@ async fn run_syft(image_id: &str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+async fn run_grype() -> Result<(), Box<dyn std::error::Error>> {
+    let mut entries = fs::read_dir("sboms").await?;
+    while let Some(sbom) = entries.next_entry().await? {
+        println!("{:#?}", sbom.path());
+        let output = Command::new("grype")
+            .arg("--output")
+            .arg("json")
+            .arg(sbom.path())
+            .output()
+            .await?;
+        if output.status.success() {
+            let stdout = str::from_utf8(&output.stdout)?;
+            println!("Syft scan successful!");
+            println!("{}", stdout);
+        } else {
+            let stderr = str::from_utf8(&output.stderr)?;
+            eprintln!("Syft failed with status {}", output.status);
+            eprintln!("Error details: {}", stderr);
+        }
+    }
+    Ok(())
+    //  let output = Command::new("grype")
+    //      .arg(arg)
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let docker = Docker::connect_with_local_defaults()?;
     check_version(&docker).await;
+    run_grype().await?;
     Ok(())
 }
